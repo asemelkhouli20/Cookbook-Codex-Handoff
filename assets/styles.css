@@ -59,6 +59,85 @@ html:not(.js) .js-only{display:none!important}
 
 /* Clouds and stars sit behind everything and answer to the current sky. */
 .sky-decor{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.leaves,.flies{position:absolute;inset:0;transition:opacity .9s}
+.leaves{opacity:var(--cloud)}
+.flies{opacity:var(--star)}
+.leaf{position:absolute;top:0;inset-inline-start:var(--x);width:22px;height:22px;color:#6F8F3A;opacity:0}
+.flies i{position:absolute;inset-inline-start:var(--x);top:var(--y);width:6px;height:6px;border-radius:50%;background:#FFE58A;box-shadow:0 0 14px 5px #FFD95A80}
+html:not(.motion) .leaves,html:not(.motion) .flies{display:none}
+.motion .leaf{animation:leaf-fall var(--t) linear var(--w) infinite}
+.motion .flies i{animation:fly-wander var(--t) ease-in-out var(--w) infinite alternate,fly-glow 2.8s ease-in-out var(--w) infinite alternate}
+@keyframes leaf-fall{0%{opacity:0;transform:translate3d(0,-6vh,0) rotate(0)}8%{opacity:.9}35%{transform:translate3d(-7vw,34vh,0) rotate(130deg)}65%{transform:translate3d(3vw,68vh,0) rotate(250deg)}92%{opacity:.9}100%{opacity:0;transform:translate3d(-4vw,108vh,0) rotate(400deg)}}
+@keyframes fly-wander{0%{transform:translate3d(0,0,0)}33%{transform:translate3d(5vw,-7vh,0)}66%{transform:translate3d(-3vw,-13vh,0)}100%{transform:translate3d(6vw,4vh,0)}}
+@keyframes fly-glow{from{opacity:.15}to{opacity:1}}
+
+/* Floating cutouts: painted objects hovering in the empty space beside the content.
+   .floater takes depth and cursor reaction from script; its image bobs on its own. */
+main{overflow-x:clip}
+.floater{position:absolute;z-index:1;width:var(--size,120px);pointer-events:none;will-change:translate}
+.floater img{width:100%;pointer-events:auto;cursor:grab;user-select:none;-webkit-user-select:none;transform:rotate(var(--tilt,0deg));filter:drop-shadow(0 16px 14px color-mix(in srgb,var(--ink) 28%,transparent));transition:scale .35s var(--spring)}
+.floater.dragging img{cursor:grabbing;scale:1.14}
+.floater:hover img{scale:1.08}
+.motion .floater img{will-change:transform;animation:bob var(--dur,7s) ease-in-out infinite alternate}
+@keyframes bob{from{transform:translateY(8px) rotate(calc(var(--tilt,0deg) - 5deg))}to{transform:translateY(-14px) rotate(calc(var(--tilt,0deg) + 6deg))}}
+@keyframes float-soft{from{translate:0 4px}to{translate:0 -7px}}
+@media(hover:none){.floater img{pointer-events:none}}
+.hero,.catalog-head,.chapter-head,.kitchen-invite,.prep,.cooking-heading,.kitchen-intro,#storage-section{position:relative}
+.f-hero-jar{--size:clamp(84px,8vw,124px);inset-inline-start:41%;top:5%}
+.f-hero-herb{--size:clamp(90px,9vw,150px);inset-inline-start:50%;top:-3%}
+.f-hero-spoon{--size:clamp(110px,12vw,190px);inset-inline-start:37%;bottom:7%}
+.f-catalog-bowl{--size:clamp(90px,10vw,160px);inset-inline-start:50%;top:-84px}
+.f-chapter{--size:clamp(90px,9vw,145px);inset-inline-start:60%;top:6%}
+.chapter-few .f-chapter{inset-inline-start:48%;top:auto;bottom:4%}
+.f-invite-herb{--size:clamp(90px,10vw,150px);inset-inline-start:43%;top:-30px}
+.f-recipe-herb{--size:clamp(70px,9vw,140px);inset-inline-start:3%;top:1%}
+.f-prep-spoon{--size:clamp(100px,12vw,180px);inset-inline-end:calc(var(--gutter) - 26px);bottom:-46px}
+.f-cook-bowl{--size:clamp(90px,10vw,150px);inset-inline-start:67%;top:-44px}
+.f-kitchen-jar{--size:clamp(80px,8vw,120px);inset-inline-start:42%;top:0}
+.f-kitchen-spoon{--size:clamp(100px,11vw,170px);inset-inline-end:0;top:0}
+.f-storage-napkin{--size:clamp(90px,10vw,150px);inset-inline-start:56%;top:-10px}
+
+/* Appearing. Script tags what's below the fold with data-r and adds .seen on arrival;
+   everything stays visible if script or motion preferences say otherwise. */
+.motion [data-r]:not(.seen){opacity:0}
+[data-r].instant{animation:none!important}
+[data-r=rise].seen{animation:appear-rise .8s var(--d,0s) cubic-bezier(.2,.8,.2,1) backwards}
+[data-r=row].seen{animation:appear-row .55s var(--d,0s) cubic-bezier(.2,.8,.2,1) backwards}
+[data-r=pop].seen{animation:appear-pop .8s var(--d,0s) var(--spring) backwards}
+[data-r=dough].seen{animation:rise 1.2s var(--d,0s) var(--glide) backwards}
+[data-r=open].seen{animation:appear-open 1s var(--d,0s) var(--glide) backwards}
+.chapter-art[data-r=open].seen{animation:appear-open 1s var(--d,0s) var(--glide) backwards,float-soft 6s 1s ease-in-out infinite alternate}
+[data-r=tile].seen{animation:appear-tile .85s var(--d,0s) var(--spring) backwards}
+[data-r=tile].seen .tile-art>img:first-child{animation:appear-open .9s var(--d,0s) var(--glide) backwards}
+[data-r=tile].seen .tile-kcal{animation:appear-badge .75s calc(var(--d,0s) + .35s) var(--spring) backwards}
+[data-r=tile].seen .tile-copy{animation:appear-rise .7s calc(var(--d,0s) + .2s) cubic-bezier(.2,.8,.2,1) backwards}
+[data-r=tile].instant .tile-art>img:first-child,[data-r=tile].instant .tile-kcal,[data-r=tile].instant .tile-copy{animation:none!important}
+.footer-chef[data-r=peek].seen{animation:appear-peek 1s var(--d,0s) var(--spring) backwards,wave 1.5s calc(var(--d,0s) + 1s) ease-in-out 1}
+@keyframes appear-rise{from{opacity:0;translate:0 34px}}
+@keyframes appear-row{from{opacity:0;translate:26px 0}}
+@keyframes appear-pop{from{opacity:0;scale:.5}}
+@keyframes appear-tile{from{opacity:0;scale:.88}}
+@keyframes appear-open{from{clip-path:inset(100% 0 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes appear-badge{from{opacity:0;scale:.2;rotate:-60deg}}
+@keyframes appear-peek{from{opacity:0;translate:0 60%}}
+@keyframes wave{0%,100%{rotate:0deg}25%{rotate:-4deg}50%{rotate:3deg}75%{rotate:-2deg}}
+/* The opening of each page plays once on load, in order. */
+.motion .hero-copy>p:not(.hero-foot),.motion .hero-copy .btn,.motion .hero-foot,.motion .dial-stops,.motion .orbit{animation:appear-rise .8s cubic-bezier(.2,.8,.2,1) backwards}
+.motion .hero-copy>p:not(.hero-foot){animation-delay:.55s}
+.motion .hero-copy .btn{animation-delay:.7s}
+.motion .hero-foot{animation-delay:.85s}
+.motion .dial-stops{animation-delay:.9s}
+.motion .orbit{animation-delay:.6s}
+.motion .window{animation:window-open 1.2s .1s var(--glide) backwards}
+@keyframes window-open{from{clip-path:inset(100% -30px -70px -30px)}to{clip-path:inset(-30px -30px -70px -30px)}}
+.motion .dial-caption{animation:appear-pop .8s .95s var(--spring) backwards,float-soft 5s 1.75s ease-in-out infinite alternate}
+.motion .hero .floater,.motion .kitchen-intro .floater,.motion .recipe-top .floater{animation:appear-pop 1s 1s var(--spring) backwards}
+.motion .hero .f-hero-herb{animation-delay:1.15s}
+.motion .hero .f-hero-spoon{animation-delay:1.3s}
+.motion .recipe-when,.motion .recipe-time,.motion .recipe-quick-links,.motion .kitchen-intro p,.motion .kitchen-intro .btn{animation:appear-rise .8s .35s cubic-bezier(.2,.8,.2,1) backwards}
+.motion .recipe-time,.motion .kitchen-intro .btn{animation-delay:.5s}
+.motion .recipe-quick-links{animation-delay:.65s}
+.motion .kitchen-scene{animation:appear-open 1.1s .1s var(--glide) backwards}
 .cloud{position:absolute;overflow:visible;color:#fff;opacity:var(--cloud);transition:opacity .9s;animation:drift 90s linear infinite alternate}
 .cloud-1{width:300px;height:120px;top:9%;inset-inline-start:48%}
 .cloud-2{width:190px;height:76px;top:46%;inset-inline-start:4%;animation-duration:120s}
@@ -162,9 +241,6 @@ html:not(.js) .chapter{max-width:none}
 .tile-copy p{margin-top:6px;font-size:14px;line-height:1.6;color:var(--soft)}
 .tile-flipbar{position:absolute;inset-inline:18%;bottom:12px;height:4px;border-radius:4px;background:#ffffff66;overflow:hidden}
 .tile-flipbar i{display:block;height:100%;width:var(--p,0);border-radius:4px;background:#fff;transition:width .3s}
-.motion .chapter:not(.in) .tile{opacity:0}
-.motion .chapter.in .tile{animation:tile-in .7s var(--spring) backwards;animation-delay:calc(var(--i,0)*45ms)}
-@keyframes tile-in{from{opacity:0;scale:.86}}
 
 .kitchen-invite{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:clamp(24px,5vw,72px);align-items:center;max-width:1520px;margin:0 auto;padding:0 var(--gutter) clamp(72px,10vw,120px)}
 .kitchen-invite h2{font-size:clamp(34px,4.6vw,68px);font-weight:900;margin-bottom:14px}
@@ -215,7 +291,7 @@ dialog::backdrop{background:rgb(12 10 34/.6);backdrop-filter:blur(6px);-webkit-b
 .hero-art{width:100%;aspect-ratio:1;max-height:84svh;object-fit:cover;background:var(--card);border-start-start-radius:50%;border-end-start-radius:44px}
 .kcal-badge{position:absolute;inset-inline-start:-2%;bottom:7%;display:grid;place-content:center;width:clamp(104px,12vw,150px);aspect-ratio:1;border-radius:50%;background:var(--pop);color:var(--on-pop);font-size:clamp(13px,1.1vw,15px);line-height:1.3;text-align:center}
 .kcal-badge b{display:block;font-size:clamp(30px,3.4vw,46px);font-weight:900;line-height:1.1}
-.motion .kcal-badge{animation:badge-in .9s .4s var(--spring) backwards}
+.motion .kcal-badge{animation:badge-in .9s .4s var(--spring) backwards,float-soft 5s 1.3s ease-in-out infinite alternate}
 @keyframes badge-in{from{opacity:0;transform:rotate(-70deg) scale(.3)}}
 .nutrition,.prep,.cooking-heading,.steps,.recipe-actions,.recipe-pagination{max-width:1420px;margin-inline:auto;padding-inline:var(--gutter)}
 .nutrition{padding-block:clamp(36px,5vw,64px)}
@@ -434,6 +510,12 @@ html[data-sky=night] .footer{border-top:0}
   .cook-end{grid-row:1/-1}
 }
 @media(max-width:820px){
+  .f-hero-herb,.f-catalog-bowl,.f-chapter,.f-invite-herb,.f-cook-bowl,.f-kitchen-jar,.f-storage-napkin{display:none}
+  .f-hero-jar{--size:76px;inset-inline-start:auto;inset-inline-end:var(--gutter);top:0}
+  .f-hero-spoon{--size:96px;inset-inline-start:auto;inset-inline-end:2%;bottom:auto;top:calc(50% + 40px)}
+  .f-recipe-herb{--size:76px;inset-inline-start:4%}
+  .f-prep-spoon{--size:96px;bottom:-30px}
+  .f-kitchen-spoon{--size:84px;top:auto;bottom:calc(38vw + 40px)}
   .hero{grid-template-columns:minmax(0,1fr);min-height:0;gap:8px;padding-top:6px}
   .scene{--win:min(56vw,300px);--r:calc(var(--win)/2 + 26px);padding-top:calc(26px + 30px);gap:10px}
   .thin{font-size:clamp(36px,10vw,64px)}
@@ -508,6 +590,9 @@ html[data-sky=night] .footer{border-top:0}
   .js .day-rail a[aria-current] .rail-label{margin-inline-start:6px}
   .stop{gap:6px}
 }
+@media(max-width:360px){
+  .f-kitchen-spoon{display:none}
+}
 @media(prefers-reduced-motion:reduce){
   *,*:before,*:after{animation:none!important;transition:none!important}
 }
@@ -519,6 +604,8 @@ html[data-sky=night] .footer{border-top:0}
 }
 @page{size:A4;margin:13mm}
 @media print{
+  .floater,.sky-decor{display:none!important}
+  [data-r],[data-r] *{opacity:1!important;animation:none!important;clip-path:none!important;translate:none!important;scale:none!important}
   .guide li{display:block}
   .guide li:before{display:none}
   html{--sky:#fff;--ink:#222;--soft:#444;--pop:#222;--on-pop:#fff;--card:#fff;background:#fff}

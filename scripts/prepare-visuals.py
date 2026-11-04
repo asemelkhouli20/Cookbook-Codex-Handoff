@@ -12,4 +12,9 @@ def convert(path):
  subprocess.run(['cwebp','-quiet','-q','83','-resize','960','0',str(path),'-o',str(out)],check=True)
 paths=list(source.rglob('*.png'))
 with ThreadPoolExecutor(max_workers=5) as pool:list(pool.map(convert,paths))
+# Floating decor renders small, so it gets its own lighter copies.
+for path in (source/'decor').glob('*.png'):
+ out=target/'floaters'/path.with_suffix('.webp').name
+ out.parent.mkdir(exist_ok=True)
+ subprocess.run(['cwebp','-quiet','-q','84','-alpha_q','90','-resize','360','0',str(path),'-o',str(out)],check=True)
 print(f'Prepared {len(paths)} web images; original PNGs preserved.')

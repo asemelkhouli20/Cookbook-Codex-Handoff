@@ -41,6 +41,114 @@ const showImage = (box, src, alt, direction = 1) => {
   image.decode().then(reveal, reveal);
 };
 
+/* ---------- Things appear as they reach the screen ---------- */
+if (motion) {
+  // On wide screens step pictures stay hidden, so they simply never fire.
+  const appearing = [
+    ['.catalog-head h2', 'dough'], ['.catalog-head>div', 'rise'], ['.day-rail', 'rise'],
+    ['.chapter-time', 'rise'], ['.chapter-title p', 'rise'], ['.chapter-art', 'open'], ['.tile', 'tile'],
+    ['.kitchen-invite>div', 'rise'], ['.invite-art', 'open'],
+    ['.floater:not(.hero .floater,.kitchen-intro .floater,.recipe-top .floater)', 'pop'],
+    ['.nutrient', 'rise'], ['.nutrition .tools', 'rise'], ['.ingredients', 'rise'], ['.ingredients tbody tr', 'row'], ['.note', 'rise'],
+    ['.cooking-heading h2', 'dough'], ['.cooking-heading p', 'rise'], ['.cooking-heading .btn', 'pop'],
+    ['.step img', 'open'], ['.caption', 'rise'], ['.recipe-actions', 'rise'], ['.recipe-pagination a', 'rise'],
+    ['.guide-head img', 'pop'], ['.guide h2', 'rise'], ['.guide-sub', 'rise'], ['.guide-tags span', 'pop'], ['.guide li', 'rise'],
+    ['#storage-section>h2', 'dough'], ['.storage-notes p', 'rise'], ['.day-picker', 'rise'], ['.legend', 'rise'], ['#storage-section h3', 'rise'], ['.storage-wrap', 'rise'], ['.storage-foot', 'rise'],
+    ['.footer-copy', 'rise'], ['.footer-chef', 'peek'],
+  ];
+  appearing.forEach(([selector, kind]) => $$(selector).forEach(node => { node.dataset.r = kind; }));
+  // Whatever arrives together lands one after another, in reading order.
+  const arrive = new IntersectionObserver(entries => {
+    const arriving = entries.filter(entry => entry.isIntersecting);
+    arriving.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top || b.boundingClientRect.left - a.boundingClientRect.left);
+    arriving.forEach((entry, index) => {
+      entry.target.style.setProperty('--d', `${Math.min(index, 8) * 70}ms`);
+      entry.target.classList.add('seen');
+      arrive.unobserve(entry.target);
+    });
+    // Already scrolled past (a deep link, or coming back): no need to replay it.
+    entries.forEach(entry => {
+      if (!entry.isIntersecting && entry.boundingClientRect.bottom < 0) {
+        entry.target.classList.add('seen', 'instant');
+        arrive.unobserve(entry.target);
+      }
+    });
+  }, { rootMargin: '0px 0px -8% 0px' });
+  $$('[data-r]').forEach(node => arrive.observe(node));
+}
+
+/* ---------- Floating cutouts: depth on scroll, shy of the cursor, and they can be flung ---------- */
+if (motion) {
+  const floats = $$('.floater').map(element => ({ element, depth: Number(element.dataset.depth), x: 0, y: 0, vx: 0, vy: 0, held: false, moved: 0, visible: false }));
+  let pointerX = -9999;
+  let pointerY = -9999;
+  let running = false;
+  addEventListener('pointermove', event => { pointerX = event.clientX; pointerY = event.clientY; }, { passive: true });
+  const animate = () => {
+    const showing = floats.filter(float => float.visible);
+    if (!showing.length) { running = false; return; }
+    showing.forEach(float => {
+      const box = float.element.getBoundingClientRect();
+      const homeX = box.left + box.width / 2 - float.x;
+      const homeY = box.top + box.height / 2 - float.y;
+      let targetX = 0;
+      let targetY = (innerHeight / 2 - homeY) * float.depth;
+      if (float.held) {
+        targetX = pointerX - homeX;
+        targetY = pointerY - homeY;
+      } else {
+        const dx = homeX + targetX - pointerX;
+        const dy = homeY + targetY - pointerY;
+        const distance = Math.hypot(dx, dy) || 1;
+        const reach = box.width * .5 + 130;
+        if (distance < reach) {
+          const push = (1 - distance / reach) ** 2 * 70;
+          targetX += dx / distance * push;
+          targetY += dy / distance * push;
+        }
+      }
+      // A soft spring, so it overshoots and settles instead of following rigidly.
+      const pull = float.held ? .22 : .05;
+      float.vx = (float.vx + (targetX - float.x) * pull) * .86;
+      float.vy = (float.vy + (targetY - float.y) * pull) * .86;
+      float.x += float.vx;
+      float.y += float.vy;
+      float.element.style.translate = `${float.x.toFixed(1)}px ${float.y.toFixed(1)}px`;
+      float.element.style.rotate = `${Math.max(-30, Math.min(30, float.vx * 1.5)).toFixed(1)}deg`;
+    });
+    requestAnimationFrame(animate);
+  };
+  const seen = new IntersectionObserver(entries => {
+    entries.forEach(entry => { floats.find(float => float.element === entry.target).visible = entry.isIntersecting; });
+    if (!running && floats.some(float => float.visible)) { running = true; requestAnimationFrame(animate); }
+  }, { rootMargin: '25% 0px' });
+  floats.forEach(float => {
+    seen.observe(float.element);
+    const picture = $('img', float.element);
+    picture.addEventListener('dragstart', event => event.preventDefault());
+    picture.addEventListener('pointerdown', event => {
+      event.preventDefault();
+      picture.setPointerCapture(event.pointerId);
+      float.held = true;
+      float.moved = 0;
+      float.element.classList.add('dragging');
+    });
+    picture.addEventListener('pointermove', event => { if (float.held) float.moved += Math.abs(event.movementX) + Math.abs(event.movementY); });
+    const letGo = () => {
+      if (!float.held) return;
+      float.held = false;
+      float.element.classList.remove('dragging');
+      // A plain click gets a little hop and a spin.
+      if (float.moved < 6) {
+        float.vy -= 22;
+        float.element.animate({ rotate: ['0deg', '360deg'] }, { duration: 800, easing: 'cubic-bezier(.2,.9,.3,1)', composite: 'add' });
+      }
+    };
+    picture.addEventListener('pointerup', letGo);
+    picture.addEventListener('pointercancel', letGo);
+  });
+}
+
 /* ---------- Home: the day dial ---------- */
 const dial = $('[data-dial]');
 let dialSky = 'morning';
@@ -145,10 +253,7 @@ if (skyChapters.length) {
   document.fonts.ready.then(followThumb);
   update();
 
-  // A chapter's title rises and its tiles land the first time it arrives.
-  $$('.chapter .tile').forEach(tile => {
-    tile.style.setProperty('--i', [...tile.parentNode.children].indexOf(tile) % 8);
-  });
+  // A chapter's title rises the first time it arrives.
   if (motion) {
     const reveal = new IntersectionObserver(entries => entries.forEach(entry => {
       if (entry.isIntersecting) { entry.target.classList.add('in'); reveal.unobserve(entry.target); }
