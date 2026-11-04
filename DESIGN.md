@@ -1,13 +1,15 @@
-# A kitchen to come home to
+# One day in the kitchen
 
-Direction: an illustrated family cookbook on a warm kitchen table. The welcoming opening, meal navigation, and individual recipe pages should have distinct purposes and shapes.
+Direction: the book is organised around a day (morning, 3pm, 7pm, before the gym, after it), so the site *is* that day. The sky changes as you move through the meals. The warm painted illustrations stay untinted and read like lit windows against it.
 
-- Typography: Noto Naskh Arabic for flowing, generous headings; IBM Plex Sans Arabic for readable instructions and navigation. Host both locally.
-- Palette: deep pine for the welcome and footer, honey parchment for the page, terracotta for small accents, olive for practical cooking notes. Avoid tinting the illustrations.
-- Homepage: a generous welcome with an arched kitchen illustration; a slim five-meal navigation; chapter introductions beside open recipe grids. Recipe tiles use an image and text on the page, rather than enclosing everything in repeated boxes.
-- Recipe: an editorial opening, paper ingredient list, smaller preparation note, and large numbered illustrations. The food and the current action stay fully visible.
-- Kitchen reference: a distinct notebook opening and readable guide sections. Storage tables scroll inside their own area on phones.
-- Mobile: single-column welcome and recipe instructions, two-column catalog only where titles remain readable, no horizontal page overflow.
+- Colour: five skies, each a full set of tokens in `assets/styles.css`: saffron morning, clear noon blue, apricot sunset, violet dusk, indigo night. Every colour on a page comes from the current sky, and all ink/accent pairs meet WCAG AA. Recipes wear their chapter's sky, the kitchen notebook wears noon, and the footer is always night.
+- Typography: Alexandria variable (100–900, hosted locally) is the only family. Hierarchy comes from extreme weight contrast. Never add letter-spacing or italics to Arabic.
+- Signature motion: type rises like dough, from hairline to full weight (hero headline, chapter titles, recipe titles). Keep this the one recurring flourish.
+- Homepage: a draggable sun travels an arc over an arched kitchen window; it climbs to the visitor's own hour on first load. Below it, chapters with huge titles and a staggered recipe grid. All 35 recipes stay visible: search opens a separate list and never hides the catalog.
+- Recipe: picture bleeding off the page edge, servings switch, tappable ingredient checklist with progress, a sticky step picture on wide screens, and cook mode (full screen, one step at a time, timers, keeps the screen awake). The food and the current action stay fully visible (`object-fit: contain` on steps).
+- Kitchen reference: sticky topic index and a fridge day slider that highlights one day across every storage table. Tables scroll inside their own area on phones.
+- Direction: logical CSS properties throughout. The few physical `left` values sit under pixel-measured transforms and are marked `rtl-ok`. In cook mode left/swipe-right is forward, as in an Arabic book.
+- Foundations: everything works without JavaScript (all serving columns, every step image, links for navigation), `prefers-reduced-motion` turns motion off, and printing keeps all servings and steps.
 - Keep all 35 recipe choices on index.html, separate recipe URLs, existing cooking text and quantities. Use available generated artwork with original-image fallbacks.
 
-Verification: rebuild all 37 pages; verify local assets/anchors; check fonts and desktop/mobile views; exercise meal links, recipe navigation and ingredient checkboxes.
+Verification: rebuild all 37 pages; run `scripts/check.py`; check desktop and phone (down to 320px) for horizontal overflow against the device width, not `innerWidth`, which inflates with the page; exercise the sun, search, servings, checklist, cook mode, timers, the fridge slider and print.
